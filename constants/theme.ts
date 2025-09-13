@@ -18,6 +18,9 @@ export const Colors = {
     tabIconSelected: tintColorLight,
     black: '#000000',
     white: '#ffffff',
+    lightGray: '#f0f0f0',
+    mediumGray: '#666',
+    darkGray: '#888',
   },
   dark: {
     text: '#ECEDEE',
@@ -28,6 +31,9 @@ export const Colors = {
     tabIconSelected: tintColorDark,
     black: '#000000',
     white: '#ffffff',
+    lightGray: '#333333',
+    mediumGray: '#999',
+    darkGray: '#777',
   },
 };
 

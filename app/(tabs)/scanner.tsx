@@ -13,10 +13,12 @@ import { useState, useEffect } from 'react';
 import * as Location from 'expo-location';
 import { Colors } from '@/constants/theme';
 import { sendQrData } from '@/utils/api';
+import { useLog } from '@/hooks/use-log';
 
 export default function ScannerScreen() {
   const [permission, requestPermission] = useCameraPermissions();
   const [scanned, setScanned] = useState(false);
+  const { addLog } = useLog();
 
   useEffect(() => {
     (async () => {
@@ -60,14 +62,24 @@ export default function ScannerScreen() {
       date: new Date().toISOString(),
     };
 
-    const success = await sendQrData(payload);
+    addLog({
+      type: 'QR_SCAN',
+      message: `QR Scanned: ${payload.qr}, Location: ${payload.location}`,
+      data: payload,
+    });
 
-    if (success) {
-      let message = `Data: ${data}`;
-      message += `\nLocation: Lat ${currentLocation.coords.latitude}, Lon ${currentLocation.coords.longitude}`;
+    const result = await sendQrData(payload);
+
+    addLog({
+      type: 'POST_RESULT',
+      message: `POST Result: ${result.message}`,
+      data: result,
+    });
+
+    if (result.success) {
       Alert.alert(
         'QR Code Scanned!',
-        message,
+        result.message,
         [
           {
             text: 'Scan Again',
@@ -81,7 +93,7 @@ export default function ScannerScreen() {
     } else {
       Alert.alert(
         'Error',
-        'Failed to send QR data to server. Please check your internet connection or try again later.',
+        result.message,
         [
           {
             text: 'Continue Scanning',

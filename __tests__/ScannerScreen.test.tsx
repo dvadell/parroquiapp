@@ -3,6 +3,12 @@ import { render, fireEvent, waitFor, act } from '@testing-library/react-native';
 import ScannerScreen from '../app/(tabs)/scanner';
 import { Alert } from 'react-native';
 import { CameraView as MockCameraView } from 'expo-camera';
+import { LogProvider } from '../hooks/use-log';
+
+// Helper function to render ScannerScreen within LogProvider
+const renderWithLogProvider = (component: React.ReactElement) => {
+  return render(<LogProvider>{component}</LogProvider>);
+};
 
 // Mock Alert.alert directly
 jest.spyOn(Alert, 'alert');
@@ -84,7 +90,7 @@ describe('ScannerScreen', () => {
   });
 
   it('renders correctly when camera permissions are granted', () => {
-    const { getByText } = render(<ScannerScreen />);
+    const { getByText } = renderWithLogProvider(<ScannerScreen />);
     expect(getByText('Scan QR Code')).toBeTruthy();
   });
 
@@ -95,7 +101,7 @@ describe('ScannerScreen', () => {
       { granted: false, status: 'denied' },
       jest.fn(),
     ]);
-    const { getByText } = render(<ScannerScreen />);
+    const { getByText } = renderWithLogProvider(<ScannerScreen />);
     expect(
       getByText('We need your permission to show the camera')
     ).toBeTruthy();
@@ -107,12 +113,12 @@ describe('ScannerScreen', () => {
       null, // permission is null when undetermined
       jest.fn(),
     ]);
-    const { getByText } = render(<ScannerScreen />);
+    const { getByText } = renderWithLogProvider(<ScannerScreen />);
     expect(getByText('Requesting for camera permission...')).toBeTruthy();
   });
 
   it('calls onBarcodeScanned and shows alert when QR code is scanned', async () => {
-    const { getByText } = render(<ScannerScreen />);
+    const { getByText } = renderWithLogProvider(<ScannerScreen />);
 
     // Get the mock function for CameraView
 
@@ -127,8 +133,7 @@ describe('ScannerScreen', () => {
     await waitFor(() => {
       expect(Alert.alert).toHaveBeenCalledWith(
         'QR Code Scanned!',
-        `Data: test-qr-data
-Location: Lat 0, Lon 0`,
+        'QR data sent successfully.',
         [{ text: 'Scan Again', onPress: expect.any(Function) }],
         { cancelable: false }
       );
@@ -141,7 +146,7 @@ Location: Lat 0, Lon 0`,
   });
 
   it('sends QR data to remote server on successful scan', async () => {
-    render(<ScannerScreen />);
+    renderWithLogProvider(<ScannerScreen />);
 
     const cameraViewProps = MockCameraView.mock.calls[0][0];
 
@@ -176,7 +181,7 @@ Location: Lat 0, Lon 0`,
       );
       expect(Alert.alert).toHaveBeenCalledWith(
         'QR Code Scanned!',
-        'Data: test-qr-data-post\nLocation: Lat 0, Lon 0',
+        'QR data sent successfully.',
         [{ text: 'Scan Again', onPress: expect.any(Function) }],
         { cancelable: false }
       );
@@ -185,7 +190,7 @@ Location: Lat 0, Lon 0`,
   });
 
   it('shows error alert when POST request to server fails', async () => {
-    render(<ScannerScreen />);
+    renderWithLogProvider(<ScannerScreen />);
 
     const cameraViewProps = MockCameraView.mock.calls[0][0];
 
@@ -206,7 +211,7 @@ Location: Lat 0, Lon 0`,
       expect(mockFetch).toHaveBeenCalledTimes(1);
       expect(Alert.alert).toHaveBeenCalledWith(
         'Error',
-        'Failed to send QR data to server. Please check your internet connection or try again later.',
+        'Failed to send QR data.',
         [{ text: 'Continue Scanning', onPress: expect.any(Function) }],
         { cancelable: false }
       );
@@ -221,7 +226,7 @@ Location: Lat 0, Lon 0`,
       Promise.resolve({ status: 'denied' })
     );
 
-    render(<ScannerScreen />);
+    renderWithLogProvider(<ScannerScreen />);
 
     await waitFor(() => {
       expect(Alert.alert).toHaveBeenCalledWith(
