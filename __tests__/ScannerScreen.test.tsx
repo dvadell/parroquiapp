@@ -5,6 +5,8 @@ import ScannerScreen from '../app/(tabs)/scanner';
 import { Alert } from 'react-native';
 import { CameraView as MockCameraView } from 'expo-camera';
 import { LogProvider } from '../hooks/use-log';
+import { useCameraPermissions } from 'expo-camera';
+import { processQueue } from '../utils/requestQueue';
 
 // Helper function to render ScannerScreen within LogProvider
 const renderWithLogProvider = (component: React.ReactElement) => {
@@ -26,6 +28,12 @@ jest.mock('../hooks/use-log', () => {
     }),
   };
 });
+
+// Mock processQueue
+jest.mock('../utils/requestQueue', () => ({
+  ...jest.requireActual('../utils/requestQueue'), // Import actual functions
+  processQueue: jest.fn(), // Mock processQueue
+}));
 
 // Mock the theme constants
 jest.mock('@/constants/theme', () => ({
@@ -73,6 +81,9 @@ jest.mock('expo-location', () => ({
   ),
 }));
 
+// Get reference to the mocked processQueue for clearing in tests
+const mockProcessQueue = processQueue as jest.MockedFunction<typeof processQueue>;
+
 const MOCK_ISO_DATE = '2025-09-13T12:00:00.000Z';
 
 describe('ScannerScreen', () => {
@@ -80,14 +91,12 @@ describe('ScannerScreen', () => {
     // Clear all mocks before each test
     jest.clearAllMocks();
     // Reset the mock for useCameraPermissions to its default granted state
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    require('expo-camera').useCameraPermissions.mockReturnValue([
+    useCameraPermissions.mockReturnValue([
       { granted: true, status: 'granted' },
       jest.fn(),
     ]);
     // Reset the mock for expo-location to its default granted state
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    require('expo-location').requestForegroundPermissionsAsync.mockReturnValue(
+    Location.requestForegroundPermissionsAsync.mockReturnValue(
       Promise.resolve({ status: 'granted' })
     );
     // Mock global.fetch
@@ -106,6 +115,8 @@ describe('ScannerScreen', () => {
     // Clear AsyncStorage mock data
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (AsyncStorage as any)._resetCache();
+    // Clear the processQueue mock using the typed reference
+    mockProcessQueue.mockClear();
   });
 
   it('renders correctly when camera permissions are granted', () => {
@@ -115,8 +126,7 @@ describe('ScannerScreen', () => {
 
   it('shows permission request message when permissions are not granted', () => {
     // Mock permissions to be not granted for this specific test
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    require('expo-camera').useCameraPermissions.mockReturnValueOnce([
+    useCameraPermissions.mockReturnValueOnce([
       { granted: false, status: 'denied' },
       jest.fn(),
     ]);
@@ -127,8 +137,7 @@ describe('ScannerScreen', () => {
   });
 
   it('shows requesting permission message when permission status is undetermined', () => {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    require('expo-camera').useCameraPermissions.mockReturnValueOnce([
+    useCameraPermissions.mockReturnValueOnce([
       null, // permission is null when undetermined
       jest.fn(),
     ]);
@@ -208,6 +217,35 @@ describe('ScannerScreen', () => {
     mockFetch.mockRestore(); // Restore original fetch mock
   });
 
+  it('calls processQueue after a successful POST request', async () => {
+    renderWithLogProvider(<ScannerScreen />);
+
+    const cameraViewProps = MockCameraView.mock.calls[0][0];
+
+    // Mock the fetch response for a successful POST
+    const mockFetch = jest.spyOn(global, 'fetch').mockImplementationOnce(() =>
+      Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve({ message: 'QR data received' }),
+        status: 200,
+      } as Response)
+    );
+
+    act(() => {
+      cameraViewProps.onBarcodeScanned({
+        data: 'test-qr-data-success-and-process',
+      });
+    });
+
+    await waitFor(() => {
+      expect(mockFetch).toHaveBeenCalledTimes(1);
+      expect(processQueue).toHaveBeenCalledTimes(1);
+      expect(processQueue).toHaveBeenCalledWith(mockAddLog);
+    });
+
+    mockFetch.mockRestore();
+  });
+
   it('shows error alert when POST request to server fails', async () => {
     renderWithLogProvider(<ScannerScreen />);
 
@@ -240,8 +278,7 @@ describe('ScannerScreen', () => {
 
   it('shows alert when location permission is denied', async () => {
     // Override the default mock for this test
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    require('expo-location').requestForegroundPermissionsAsync.mockReturnValueOnce(
+    Location.requestForegroundPermissionsAsync.mockReturnValueOnce(
       Promise.resolve({ status: 'denied' })
     );
 
