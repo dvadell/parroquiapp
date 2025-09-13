@@ -12,35 +12,11 @@ import { CameraView, useCameraPermissions } from 'expo-camera';
 import { useState, useEffect } from 'react';
 import * as Location from 'expo-location';
 import { Colors } from '@/constants/theme';
+import { sendQrData } from '@/utils/api';
 
 export default function ScannerScreen() {
   const [permission, requestPermission] = useCameraPermissions();
   const [scanned, setScanned] = useState(false);
-  const [scannedData, setScannedData] = useState('');
-  const [location, setLocation] = useState<Location.LocationObject | null>(
-    null
-  );
-
-  useEffect(() => {
-    if (scanned && scannedData && location) {
-      let message = `Data: ${scannedData}`;
-      message += `\nLocation: Lat ${location.coords.latitude}, Lon ${location.coords.longitude}`;
-      Alert.alert(
-        'QR Code Scanned!',
-        message,
-        [
-          {
-            text: 'Scan Again',
-            onPress: () => {
-              setScanned(false);
-              setLocation(null);
-            },
-          },
-        ],
-        { cancelable: false }
-      );
-    }
-  }, [scanned, scannedData, location]);
 
   useEffect(() => {
     (async () => {
@@ -75,10 +51,48 @@ export default function ScannerScreen() {
 
   const handleBarcodeScanned = async ({ data }: { data: string }) => {
     setScanned(true);
-    setScannedData(data);
 
-    const location = await Location.getCurrentPositionAsync({});
-    setLocation(location);
+    const currentLocation = await Location.getCurrentPositionAsync({});
+
+    const payload = {
+      qr: data,
+      location: `Lat ${currentLocation.coords.latitude}, Lon ${currentLocation.coords.longitude}`,
+      date: new Date().toISOString(),
+    };
+
+    const success = await sendQrData(payload);
+
+    if (success) {
+      let message = `Data: ${data}`;
+      message += `\nLocation: Lat ${currentLocation.coords.latitude}, Lon ${currentLocation.coords.longitude}`;
+      Alert.alert(
+        'QR Code Scanned!',
+        message,
+        [
+          {
+            text: 'Scan Again',
+            onPress: () => {
+              setScanned(false);
+            },
+          },
+        ],
+        { cancelable: false }
+      );
+    } else {
+      Alert.alert(
+        'Error',
+        'Failed to send QR data to server. Please check your internet connection or try again later.',
+        [
+          {
+            text: 'Continue Scanning',
+            onPress: () => {
+              setScanned(false);
+            },
+          },
+        ],
+        { cancelable: false }
+      );
+    }
   };
 
   return (
@@ -101,7 +115,12 @@ export default function ScannerScreen() {
       </View>
 
       {scanned && (
-        <Button title={'Tap to Scan Again'} onPress={() => setScanned(false)} />
+        <Button
+          title={'Tap to Scan Again'}
+          onPress={() => {
+            setScanned(false);
+          }}
+        />
       )}
     </SafeAreaView>
   );
