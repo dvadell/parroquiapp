@@ -1,5 +1,6 @@
 import React from 'react';
 import { render, fireEvent, waitFor, act } from '@testing-library/react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import ScannerScreen from '../app/(tabs)/scanner';
 import { Alert } from 'react-native';
 import { CameraView as MockCameraView } from 'expo-camera';
@@ -12,6 +13,19 @@ const renderWithLogProvider = (component: React.ReactElement) => {
 
 // Mock Alert.alert directly
 jest.spyOn(Alert, 'alert');
+
+// Mock useLog hook
+const mockAddLog = jest.fn(); // Define mockAddLog outside
+jest.mock('../hooks/use-log', () => {
+  const actualModule = jest.requireActual('../hooks/use-log');
+  return {
+    ...actualModule, // Include all actual exports
+    useLog: () => ({
+      addLog: mockAddLog, // Use the defined mockAddLog
+      logs: [],
+    }),
+  };
+});
 
 // Mock the theme constants
 jest.mock('@/constants/theme', () => ({
@@ -87,6 +101,11 @@ describe('ScannerScreen', () => {
     // Mock Date.prototype.toISOString
     const MOCK_ISO_DATE = '2025-09-13T12:00:00.000Z';
     jest.spyOn(Date.prototype, 'toISOString').mockReturnValue(MOCK_ISO_DATE);
+    // Clear the addLog mock
+    mockAddLog.mockClear();
+    // Clear AsyncStorage mock data
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (AsyncStorage as any)._resetCache();
   });
 
   it('renders correctly when camera permissions are granted', () => {
@@ -211,7 +230,7 @@ describe('ScannerScreen', () => {
       expect(mockFetch).toHaveBeenCalledTimes(1);
       expect(Alert.alert).toHaveBeenCalledWith(
         'Error',
-        'Failed to send QR data.',
+        'Failed to send QR data. Queueing.',
         [{ text: 'Continue Scanning', onPress: expect.any(Function) }],
         { cancelable: false }
       );
@@ -233,5 +252,64 @@ describe('ScannerScreen', () => {
         'Permission to access location was denied'
       );
     });
+  });
+
+  it('queues failed POST requests and logs the event', async () => {
+    // No longer needed, mockAddLog is directly available
+
+    renderWithLogProvider(<ScannerScreen />);
+
+    const cameraViewProps = MockCameraView.mock.calls[0][0];
+
+    // Mock the fetch response to simulate a failure
+    const mockFetch = jest.spyOn(global, 'fetch').mockImplementationOnce(() =>
+      Promise.resolve({
+        ok: false,
+        status: 500,
+        statusText: 'Internal Server Error',
+        text: () => Promise.resolve('Internal Server Error'), // Add text method for errorData
+      } as Response)
+    );
+
+    act(() => {
+      cameraViewProps.onBarcodeScanned({ data: 'test-qr-data-queue' });
+    });
+
+    await waitFor(() => {
+      expect(mockFetch).toHaveBeenCalledTimes(1);
+      expect(AsyncStorage.getItem).toHaveBeenCalledWith('failedRequestQueue');
+      expect(AsyncStorage.setItem).toHaveBeenCalledWith(
+        'failedRequestQueue',
+        expect.any(String) // Expect a string
+      );
+      const storedQueue = JSON.parse(
+        (AsyncStorage.setItem as jest.Mock).mock.calls[0][1]
+      ); // Parse the stored string
+      expect(storedQueue).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            url: 'https://parroquia.of.ardor.link/api/qr',
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: expect.stringContaining('"qr":"test-qr-data-queue"'),
+            timestamp: expect.any(Number),
+          }),
+        ])
+      );
+      expect(mockAddLog).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: 'POST_RESULT',
+          message: expect.stringContaining(
+            'Failed to send QR data. Queueing. ( 1 queued requests )'
+          ),
+          data: expect.objectContaining({
+            error: expect.any(String),
+            queuedRequests: 1,
+          }),
+        })
+      );
+    });
+
+    mockFetch.mockRestore();
   });
 });

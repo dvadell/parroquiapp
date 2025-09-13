@@ -68,7 +68,7 @@ export default function ScannerScreen() {
       data: payload,
     });
 
-    const result = await sendQrData(payload);
+    const result = await sendQrData(payload, addLog);
 
     addLog({
       type: 'POST_RESULT',

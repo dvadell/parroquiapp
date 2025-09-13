@@ -27,3 +27,18 @@ The primary screen components and their layout are defined in the following file
 - `app/(tabs)/_layout.tsx`: This file defines the main tab navigator, acting as the `HomeScreen` that orchestrates the tab-based navigation between the `ScannerScreen` and `ListScreen`.
 - `app/(tabs)/scanner.tsx`: This file contains the `ScannerScreen` component, which is one of the main tabs in the application.
 - `app/(tabs)/list.tsx`: This file contains the `ListScreen` component, serving as the other main tab in the application.
+
+## Request Retry Mechanism
+
+To ensure data persistence and reliability, especially in environments with intermittent network connectivity, a request retry mechanism has been implemented for failed POST requests. If a `sendQrData` request fails, it is automatically queued and stored persistently on the device. These queued requests are then retried when the application starts or resumes.
+
+**Key Components and Files:**
+
+- **`utils/requestQueue.ts`**: This new file contains the core logic for managing the request queue.
+  - `queueRequest(requestDetails)`: Stores a failed request's details (URL, method, headers, body, timestamp) in `AsyncStorage`.
+  - `getQueueLength()`: Returns the current number of requests in the queue.
+  - `processQueue(addLog)`: Retrieves requests from `AsyncStorage`, attempts to re-send them, and removes successfully sent requests from the queue. It also logs the processing status.
+- **`utils/api.ts`**: The `sendQrData` function in this file now integrates with the queuing mechanism. If a POST request fails, it calls `queueRequest` to store the request and logs the queuing event to the `LogScreen`.
+- **`app/(tabs)/scanner.tsx`**: This file, which initiates the `sendQrData` calls, now passes the `addLog` function (from `useLog` hook) to `sendQrData` to enable logging of queuing events.
+- **`app/(tabs)/_layout.tsx`**: This layout file is responsible for initiating the `processQueue` function when the application's tab layout component mounts. It retrieves the `addLog` function from the `useLog` context and passes it to `processQueue` to ensure retry attempts are logged.
+- **`@react-native-async-storage/async-storage`**: This library is used for persistent storage of the request queue, ensuring that queued requests survive app crashes or device restarts.

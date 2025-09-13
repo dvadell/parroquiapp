@@ -17,10 +17,10 @@ const LogContext = createContext<LogContextType | undefined>(undefined);
 export const LogProvider = ({ children }: { children: ReactNode }) => {
   const [logs, setLogs] = useState<LogEntry[]>([]);
 
-  const addLog = (logEntry: Omit<LogEntry, 'timestamp'>) => {
+  const addLog = (payload: Omit<LogEntry, 'timestamp'>) => {
     setLogs((prevLogs) => [
       {
-        ...logEntry,
+        ...payload,
         timestamp: new Date().toISOString(),
       },
       ...prevLogs,

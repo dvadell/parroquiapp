@@ -5,16 +5,29 @@ interface QrDataPayload {
   date: string;
 }
 
+import { queueRequest, getQueueLength } from './requestQueue';
+
 export async function sendQrData(
-  payload: QrDataPayload
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  payload: QrDataPayload,
+  addLog: (payload: {
+    type: 'QR_SCAN' | 'POST_RESULT';
+    message: string;
+    data?: unknown;
+  }) => void
 ): Promise<{ success: boolean; message: string; error?: unknown }> {
+  const url = 'https://parroquia.of.ardor.link/api/qr';
+  const method = 'POST';
+  const headers = {
+    'Content-Type': 'application/json',
+  };
+  const body = JSON.stringify(payload);
+
   try {
-    const response = await fetch('https://parroquia.of.ardor.link/api/qr', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(payload),
+    const response = await fetch(url, {
+      method,
+      headers,
+      body,
     });
 
     if (!response.ok) {
@@ -26,9 +39,32 @@ export async function sendQrData(
 
     return { success: true, message: 'QR data sent successfully.' };
   } catch (error: unknown) {
+    // Queue the failed request
+    const requestDetails = {
+      url,
+      method,
+      headers,
+      body,
+      timestamp: Date.now(),
+    };
+    await queueRequest(requestDetails);
+    const currentQueueLength = await getQueueLength();
+
+    const errorMessage = 'Failed to send QR data. Queueing.';
+    const logMessage = `POST Result: ${errorMessage} ( ${currentQueueLength} queued requests )`;
+
+    addLog({
+      type: 'POST_RESULT',
+      message: logMessage,
+      data: {
+        error: error instanceof Error ? error.message : String(error),
+        queuedRequests: currentQueueLength,
+      },
+    });
+
     return {
       success: false,
-      message: 'Failed to send QR data.',
+      message: errorMessage,
       error: error instanceof Error ? error.message : String(error),
     };
   }
