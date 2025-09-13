@@ -61,6 +61,8 @@ export async function processQueue(
     const failedRequests: RequestDetails[] = [];
 
     for (const request of currentQueue) {
+      // Add a 1-second delay between requests
+      await new Promise((resolve) => setTimeout(resolve, 1000));
       try {
         const response = await fetch(request.url, {
           method: request.method,

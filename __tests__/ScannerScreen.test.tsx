@@ -7,6 +7,7 @@ import { CameraView as MockCameraView } from 'expo-camera';
 import { LogProvider } from '../hooks/use-log';
 import { useCameraPermissions } from 'expo-camera';
 import { processQueue } from '../utils/requestQueue';
+import * as Location from 'expo-location';
 
 // Helper function to render ScannerScreen within LogProvider
 const renderWithLogProvider = (component: React.ReactElement) => {
@@ -82,7 +83,9 @@ jest.mock('expo-location', () => ({
 }));
 
 // Get reference to the mocked processQueue for clearing in tests
-const mockProcessQueue = processQueue as jest.MockedFunction<typeof processQueue>;
+const mockProcessQueue = processQueue as jest.MockedFunction<
+  typeof processQueue
+>;
 
 const MOCK_ISO_DATE = '2025-09-13T12:00:00.000Z';
 
@@ -108,7 +111,6 @@ describe('ScannerScreen', () => {
       } as Response)
     );
     // Mock Date.prototype.toISOString
-    const MOCK_ISO_DATE = '2025-09-13T12:00:00.000Z';
     jest.spyOn(Date.prototype, 'toISOString').mockReturnValue(MOCK_ISO_DATE);
     // Clear the addLog mock
     mockAddLog.mockClear();

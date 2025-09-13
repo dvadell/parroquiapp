@@ -5,7 +5,7 @@ interface QrDataPayload {
   date: string;
 }
 
-import { queueRequest, getQueueLength } from './requestQueue';
+import { queueRequest, getQueueLength, processQueue } from './requestQueue';
 
 export async function sendQrData(
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -37,7 +37,10 @@ export async function sendQrData(
       );
     }
 
-    return { success: true, message: 'QR data sent successfully.' };
+    const result = { success: true, message: 'QR data sent successfully.' };
+    // Attempt to process the queue after a successful send
+    processQueue(addLog);
+    return result;
   } catch (error: unknown) {
     // Queue the failed request
     const requestDetails = {
