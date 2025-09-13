@@ -21,6 +21,8 @@ const MAPPING = {
   'paperplane.fill': 'send',
   'chevron.left.forwardslash.chevron.right': 'code',
   'chevron.right': 'chevron-right',
+  'camera.fill': 'camera', // Added for scanner tab
+  'list.bullet': 'people', // Added for list tab
 } as IconMapping;
 
 /**
@@ -44,7 +46,7 @@ export function IconSymbol({
     <MaterialIcons
       color={color}
       size={size}
-      name={MAPPING[name as keyof typeof MAPPING] || 'help-circle'} // Provide a fallback icon if name is not found
+      name={MAPPING[name as keyof typeof MAPPING] || 'error'} // Provide a fallback icon if name is not found
       style={style}
     />
   );
