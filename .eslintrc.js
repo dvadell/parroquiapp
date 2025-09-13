@@ -6,7 +6,8 @@ module.exports = {
     jest: true,
     browser: true,
   },
-  parserOptions: { // Top-level parserOptions for all files (JS by default)
+  parserOptions: {
+    // Top-level parserOptions for all files (JS by default)
     ecmaVersion: 2021,
     sourceType: 'module',
     ecmaFeatures: {

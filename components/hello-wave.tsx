@@ -1,4 +1,8 @@
-import Animated, { useSharedValue, withSpring, useAnimatedStyle } from 'react-native-reanimated';
+import Animated, {
+  useSharedValue,
+  withSpring,
+  useAnimatedStyle,
+} from 'react-native-reanimated';
 import { StyleSheet } from 'react-native';
 
 export function HelloWave() {
@@ -16,11 +20,7 @@ export function HelloWave() {
   // A more complete solution would involve a useEffect or similar to start the animation
   rotation.value = withSpring(25);
 
-  return (
-    <Animated.Text style={[styles.wave, animatedStyle]}>
-      👋
-    </Animated.Text>
-  );
+  return <Animated.Text style={[styles.wave, animatedStyle]}>👋</Animated.Text>;
 }
 
 const styles = StyleSheet.create({
