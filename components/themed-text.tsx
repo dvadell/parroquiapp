@@ -1,6 +1,7 @@
 import { StyleSheet, Text, type TextProps } from 'react-native';
 
 import { useThemeColor } from '@/hooks/use-theme-color';
+import { Colors } from '@/constants/theme';
 
 export type ThemedTextProps = TextProps & {
   lightColor?: string;
@@ -44,7 +45,7 @@ const styles = StyleSheet.create({
     lineHeight: 48,
   },
   link: {
-    color: '#0a7ea4',
+    color: Colors.light.tint,
     fontSize: 32,
     lineHeight: 60,
   },

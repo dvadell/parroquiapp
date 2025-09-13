@@ -44,7 +44,7 @@ export function IconSymbol({
     <MaterialIcons
       color={color}
       size={size}
-      name={MAPPING[name]}
+      name={MAPPING[name as keyof typeof MAPPING] || 'help-circle'} // Provide a fallback icon if name is not found
       style={style}
     />
   );

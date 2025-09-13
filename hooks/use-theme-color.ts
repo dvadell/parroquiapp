@@ -11,11 +11,18 @@ export function useThemeColor(
   colorName: keyof typeof Colors.light & keyof typeof Colors.dark
 ) {
   const theme = useColorScheme() ?? 'light';
-  const colorFromProps = props[theme];
+  let colorFromProps;
+  if (theme === 'light') {
+    colorFromProps = props.light;
+  } else {
+    colorFromProps = props.dark;
+  }
 
   if (colorFromProps) {
     return colorFromProps;
   } else {
-    return Colors[theme][colorName];
+    const themeColors = theme === 'light' ? Colors.light : Colors.dark;
+    // eslint-disable-next-line security/detect-object-injection
+    return themeColors[colorName];
   }
 }

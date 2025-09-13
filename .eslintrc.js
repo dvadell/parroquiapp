@@ -54,6 +54,12 @@ module.exports = {
     'security/detect-non-literal-require': 'warn',
     'security/detect-possible-timing-attacks': 'warn',
     'security/detect-pseudoRandomBytes': 'error',
+    'react-native/no-raw-text': [
+      'error',
+      {
+        skip: ['ThemedText'],
+      },
+    ],
   },
   settings: {
     react: {
@@ -74,6 +80,9 @@ module.exports = {
       rules: {
         '@typescript-eslint/no-require-imports': 'off', // Disable for these files
         '@typescript-eslint/no-unused-vars': 'off', // Also disable for these files if 'globals' is unused
+        'no-useless-escape': 'off', // Disable for jest.config.js
+        'no-console': 'off', // Disable for utility scripts
+        'security/detect-non-literal-fs-filename': 'off', // Disable for utility scripts
       },
     },
   ],
