@@ -17,19 +17,24 @@ export default function TabLayout() {
         tabBarButton: HapticTab,
         tabBarStyle: { backgroundColor: 'white', height: 90 },
         tabBarLabelStyle: { fontSize: 20 },
-      }}>
+      }}
+    >
       <Tabs.Screen
         name="scanner"
         options={{
           title: 'Scanner',
-          tabBarIcon: ({ color }) => <IconSymbol size={38} name="camera.fill" color={color} />,
+          tabBarIcon: ({ color }) => (
+            <IconSymbol size={38} name="camera.fill" color={color} />
+          ),
         }}
       />
       <Tabs.Screen
         name="list"
         options={{
           title: 'List',
-          tabBarIcon: ({ color }) => <IconSymbol size={38} name="list.bullet" color={color} />,
+          tabBarIcon: ({ color }) => (
+            <IconSymbol size={38} name="list.bullet" color={color} />
+          ),
         }}
       />
     </Tabs>
