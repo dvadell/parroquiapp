@@ -1,13 +1,10 @@
 module.exports = {
-  preset: 'ts-jest',
-  testEnvironment: 'node',
+  preset: 'react-native',
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
-  transform: {
-    '^.+\.(ts|tsx)$': 'ts-jest',
-  },
-  globals: {
-    'ts-jest': {
-      tsconfig: 'tsconfig.json',
-    },
+  transformIgnorePatterns: [
+    'node_modules/(?!(jest-)?react-native|@react-native|@react-navigation|expo(nent)?|@expo(nent)?/.*|react-navigation|@unimodules/.*|unimodules|sentry-expo|native-base|react-native-svg)'
+  ],
+  moduleNameMapper: {
+    '^@/(.*)$': '<rootDir>/$1',
   },
 };
