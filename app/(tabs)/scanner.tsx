@@ -10,23 +10,47 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { useState, useEffect } from 'react';
+import * as Location from 'expo-location';
 import { Colors } from '@/constants/theme';
 
 export default function ScannerScreen() {
   const [permission, requestPermission] = useCameraPermissions();
   const [scanned, setScanned] = useState(false);
   const [scannedData, setScannedData] = useState('');
+  const [location, setLocation] = useState<Location.LocationObject | null>(
+    null
+  );
 
   useEffect(() => {
-    if (scanned && scannedData) {
+    if (scanned && scannedData && location) {
+      let message = `Data: ${scannedData}`;
+      message += `\nLocation: Lat ${location.coords.latitude}, Lon ${location.coords.longitude}`;
       Alert.alert(
         'QR Code Scanned!',
-        `Data: ${scannedData}`,
-        [{ text: 'Scan Again', onPress: () => setScanned(false) }],
+        message,
+        [
+          {
+            text: 'Scan Again',
+            onPress: () => {
+              setScanned(false);
+              setLocation(null);
+            },
+          },
+        ],
         { cancelable: false }
       );
     }
-  }, [scanned, scannedData]);
+  }, [scanned, scannedData, location]);
+
+  useEffect(() => {
+    (async () => {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission to access location was denied');
+        return;
+      }
+    })();
+  }, []);
 
   if (!permission) {
     // Camera permissions are still loading.
@@ -49,9 +73,12 @@ export default function ScannerScreen() {
     );
   }
 
-  const handleBarcodeScanned = ({ data }: { data: string }) => {
+  const handleBarcodeScanned = async ({ data }: { data: string }) => {
     setScanned(true);
     setScannedData(data);
+
+    const location = await Location.getCurrentPositionAsync({});
+    setLocation(location);
   };
 
   return (

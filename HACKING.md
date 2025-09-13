@@ -2,7 +2,7 @@
 
 ## App Description
 
-This is a mobile application built with Expo and React Native, likely designed for a parish (parroquia). It features a tab-based navigation structure with a "Scanner" screen and a "List" screen, suggesting functionalities such as scanning (e.g., QR codes for attendance, inventory, or donations) and displaying lists of related data.
+This is a mobile application built with Expo and React Native, likely designed for a parish (parroquia). It features a tab-based navigation structure with a "Scanner" screen and a "List" screen. The Scanner tab has a button that reads a QR code from the camera, which now also captures the GPS location, suggesting functionalities such as scanning for attendance, inventory, or donations with location tracking. The List screen likely displays data related to the scanned items.
 
 ## Modules Used
 
@@ -17,6 +17,7 @@ The application utilizes a variety of modules, primarily from the Expo and React
 - `@react-navigation/native`: Core navigation utilities for React Native.
 - `expo-haptics`: Haptic feedback utilities.
 - `expo-symbols`: Apple SF Symbols integration for iOS.
+- `expo-location`: Provides access to device's location services.
 - `react-native-gesture-handler`, `react-native-reanimated`, `react-native-safe-area-context`, `react-native-screens`: Libraries for handling gestures, animations, safe area insets, and screen management in React Native.
 
 ## Main Screen Files

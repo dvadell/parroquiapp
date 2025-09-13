@@ -41,6 +41,11 @@ describe('ScannerScreen', () => {
       { granted: true, status: 'granted' },
       jest.fn(),
     ]);
+    // Reset the mock for expo-location to its default granted state
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    require('expo-location').requestForegroundPermissionsAsync.mockReturnValue(
+      Promise.resolve({ status: 'granted' })
+    );
   });
 
   it('renders correctly when camera permissions are granted', () => {
@@ -89,7 +94,8 @@ describe('ScannerScreen', () => {
     await waitFor(() => {
       expect(Alert.alert).toHaveBeenCalledWith(
         'QR Code Scanned!',
-        'Data: test-qr-data',
+        `Data: test-qr-data
+Location: Lat 0, Lon 0`,
         [{ text: 'Scan Again', onPress: expect.any(Function) }],
         { cancelable: false }
       );
@@ -99,5 +105,21 @@ describe('ScannerScreen', () => {
     const scanAgainButton = getByText('Tap to Scan Again');
     fireEvent.press(scanAgainButton);
     expect(getByText('Scan QR Code')).toBeTruthy(); // Should go back to scanning state
+  });
+
+  it('shows alert when location permission is denied', async () => {
+    // Override the default mock for this test
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    require('expo-location').requestForegroundPermissionsAsync.mockReturnValueOnce(
+      Promise.resolve({ status: 'denied' })
+    );
+
+    render(<ScannerScreen />);
+
+    await waitFor(() => {
+      expect(Alert.alert).toHaveBeenCalledWith(
+        'Permission to access location was denied'
+      );
+    });
   });
 });
