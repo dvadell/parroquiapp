@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, fireEvent, waitFor, act } from '@testing-library/react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import ScannerScreen from '../app/(tabs)/scanner';
+import ScannerScreen from '../app/(tabs)/index';
 import { Alert } from 'react-native';
 import { CameraView as MockCameraView } from 'expo-camera';
 import { LogProvider } from '../hooks/use-log';
@@ -201,6 +201,7 @@ describe('ScannerScreen', () => {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
+            'Authorization': 'Basic cGFycm9xdWlhOnBhcnJvcXVpYQ==',
           },
           body: JSON.stringify({
             qr: 'test-qr-data-post',
@@ -329,7 +330,10 @@ describe('ScannerScreen', () => {
           expect.objectContaining({
             url: 'https://parroquia.of.ardor.link/api/qr',
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Basic cGFycm9xdWlhOnBhcnJvcXVpYQ==',
+            },
             body: expect.stringContaining('"qr":"test-qr-data-queue"'),
             timestamp: expect.any(Number),
           }),
