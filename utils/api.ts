@@ -20,7 +20,7 @@ export async function sendQrData(
   const method = 'POST';
   const headers = {
     'Content-Type': 'application/json',
-    'Authorization': 'Basic cGFycm9xdWlhOnBhcnJvcXVpYQ==',
+    Authorization: 'Basic cGFycm9xdWlhOnBhcnJvcXVpYQ==',
   };
   const body = JSON.stringify(payload);
 

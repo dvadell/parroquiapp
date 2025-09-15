@@ -34,7 +34,7 @@ describe('api', () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Basic cGFycm9xdWlhOnBhcnJvcXVpYQ==',
+          Authorization: 'Basic cGFycm9xdWlhOnBhcnJvcXVpYQ==',
         },
         body: JSON.stringify(payload),
       })

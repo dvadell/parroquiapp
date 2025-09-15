@@ -201,7 +201,7 @@ describe('ScannerScreen', () => {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': 'Basic cGFycm9xdWlhOnBhcnJvcXVpYQ==',
+            Authorization: 'Basic cGFycm9xdWlhOnBhcnJvcXVpYQ==',
           },
           body: JSON.stringify({
             qr: 'test-qr-data-post',
@@ -332,7 +332,7 @@ describe('ScannerScreen', () => {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
-              'Authorization': 'Basic cGFycm9xdWlhOnBhcnJvcXVpYQ==',
+              Authorization: 'Basic cGFycm9xdWlhOnBhcnJvcXVpYQ==',
             },
             body: expect.stringContaining('"qr":"test-qr-data-queue"'),
             timestamp: expect.any(Number),
