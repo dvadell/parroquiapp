@@ -14,6 +14,6 @@ jest.mock('@/constants/theme', () => ({
 describe('ListScreen', () => {
   it('renders correctly', () => {
     const { getByText } = render(<ListScreen />);
-    expect(getByText('List')).toBeTruthy();
+    expect(getByText('Tomar lista de nuevo')).toBeTruthy();
   });
 });

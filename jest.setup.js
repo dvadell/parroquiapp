@@ -1,3 +1,11 @@
+jest.mock('react-native-webview', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { View } = require('react-native');
+  return {
+    WebView: (props) => <View {...props} />,
+  };
+});
+
 jest.mock('expo-location', () => ({
   requestForegroundPermissionsAsync: jest.fn(() =>
     Promise.resolve({ status: 'granted' })
