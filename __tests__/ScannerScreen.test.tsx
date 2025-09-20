@@ -90,6 +90,7 @@ const mockProcessQueue = processQueue as jest.MockedFunction<
 const MOCK_ISO_DATE = '2025-09-13T12:00:00.000Z';
 
 describe('ScannerScreen', () => {
+  jest.useFakeTimers();
   beforeEach(() => {
     // Clear all mocks before each test
     jest.clearAllMocks();
@@ -162,6 +163,10 @@ describe('ScannerScreen', () => {
 
     await waitFor(() => {
       expect(getByText('OK')).toBeTruthy();
+    });
+
+    act(() => {
+      jest.runAllTimers();
     });
 
     await waitFor(() => {
