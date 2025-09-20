@@ -1,4 +1,4 @@
-import { StyleSheet, View, Text, TouchableOpacity, Alert } from 'react-native';
+import { StyleSheet, View, Text, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '@/constants/theme';
 import { WebView } from 'react-native-webview';
@@ -6,9 +6,11 @@ import { useState, useEffect } from 'react';
 import * as Location from 'expo-location';
 import { sendLocationData } from '@/utils/api';
 import { useLog } from '@/hooks/use-log';
+import { processQueue } from '@/utils/requestQueue';
 
 export default function ListScreen() {
   const [key, setKey] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
   const { addLog } = useLog();
 
   useEffect(() => {
@@ -24,42 +26,57 @@ export default function ListScreen() {
     })();
   }, []);
 
-  const handleReload = async () => {
-    setKey((prevKey) => prevKey + 1);
+  const handleSendLocationAndReloadWebView = async () => {
+    setIsLoading(true);
 
-    let location;
     try {
-      const locationResult = await Location.getCurrentPositionAsync({});
-      location = `lat:${locationResult.coords.latitude},lon:${locationResult.coords.longitude}`;
-    } catch (error) {
-      addLog({
-        type: 'LOCATION_SEND',
-        message: `Error getting location: ${error}`,
-        data: error,
-      });
-      Alert.alert(
-        'Location Error',
-        'Could not retrieve your current location.'
-      );
-      return;
-    }
+      let location;
+      try {
+        const locationResult = await Location.getCurrentPositionAsync({});
+        location = `lat:${locationResult.coords.latitude},lon:${locationResult.coords.longitude}`;
+      } catch (error) {
+        addLog({
+          type: 'LOCATION_SEND',
+          message: `Error getting location: ${error}`,
+          data: error,
+        });
+        Alert.alert(
+          'Location Error',
+          'Could not retrieve your current location.'
+        );
+        return;
+      }
 
-    const result = await sendLocationData(location, addLog);
-    if (!result.success) {
-      Alert.alert('Error', `Failed to send location data: ${result.message}`);
+      const result = await sendLocationData(location, addLog);
+      if (!result.success) {
+        Alert.alert('Error', `Failed to send location data: ${result.message}`);
+      } else {
+        // If the initial send was successful, process any queued location requests
+        processQueue(addLog, '/api/locations');
+      }
+    } finally {
+      setIsLoading(false);
     }
+  };
+
+  const handleReloadWebView = () => {
+    setKey((prevKey) => prevKey + 1);
   };
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Attendance List</Text>
       <View style={styles.buttonContainer}>
-        <TouchableOpacity style={styles.button} onPress={handleReload}>
-          <Text style={styles.buttonText}>Tomar lista de nuevo</Text>
+        <TouchableOpacity style={styles.button} onPress={handleSendLocationAndReloadWebView} disabled={isLoading}>
+          {isLoading ? (
+            <ActivityIndicator color={Colors.light.white} />
+          ) : (
+            <Text style={styles.buttonText}>Tomar lista de nuevo</Text>
+          )}
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.refreshIconContainer}
-          onPress={handleReload}
+          onPress={handleReloadWebView}
         >
           <Ionicons name="refresh" size={24} color={Colors.light.white} />
         </TouchableOpacity>

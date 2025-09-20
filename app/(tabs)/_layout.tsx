@@ -13,8 +13,8 @@ export default function TabLayout() {
   const { addLog } = useLog(); // Get addLog from context
 
   useEffect(() => {
-    // Process the queue when the component mounts
-    processQueue(addLog);
+    // Process the queue when the component mounts, only for QR requests
+    processQueue(addLog, '/api/qr');
   }, []); // Empty dependency array means this runs once on mount
 
   return (

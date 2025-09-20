@@ -43,7 +43,8 @@ export async function getQueueLength(): Promise<number> {
 
 export async function processQueue(
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  log: (message: string) => void
+  log: (message: string) => void,
+  urlFilter?: string
 ): Promise<void> {
   try {
     const currentQueueString = await AsyncStorage.getItem(QUEUE_KEY);
@@ -61,6 +62,11 @@ export async function processQueue(
     const failedRequests: RequestDetails[] = [];
 
     for (const request of currentQueue) {
+      if (urlFilter && !request.url.includes(urlFilter)) {
+        failedRequests.push(request); // Keep requests that don't match the filter
+        continue;
+      }
+
       // Add a 1-second delay between requests
       await new Promise((resolve) => setTimeout(resolve, 1000));
       try {

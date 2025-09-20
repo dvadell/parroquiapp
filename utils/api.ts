@@ -39,8 +39,8 @@ export async function sendQrData(
     }
 
     const result = { success: true, message: 'QR data sent successfully.' };
-    // Attempt to process the queue after a successful send
-    processQueue(addLog);
+    // Attempt to process the queue after a successful send, only for QR requests
+    processQueue(addLog, '/api/qr');
     return result;
   } catch (error: unknown) {
     // Queue the failed request
@@ -108,7 +108,6 @@ export async function sendLocationData(
       success: true,
       message: 'Location data sent successfully.',
     };
-    processQueue(addLog);
     return result;
   } catch (error: unknown) {
     const requestDetails = {

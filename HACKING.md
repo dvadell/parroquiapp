@@ -2,7 +2,9 @@
 
 ## App Description
 
-This is a mobile application built with Expo and React Native, likely designed for a parish (parroquia). It features a tab-based navigation structure with a "Scanner" screen and a "List" screen. The Scanner tab has a button that reads a QR code from the camera, which now also captures the GPS location. For each QR code read, the content, GPS location, and timestamp are sent via HTTP POST to a remote server (`https://parroquia.of.ardor.link/api/qr`). This networking functionality is implemented within `utils/api.ts` and used by `app/(tabs)/scanner.tsx`, suggesting functionalities such as scanning for attendance, inventory, or donations with location tracking and centralized data collection. The List screen likely displays data related to the scanned items.
+This is a mobile application built with Expo and React Native, likely designed for a parish (parroquia). It features a tab-based navigation structure with a "Scanner" screen and a "List" screen. The Scanner tab has a button that reads a QR code from the camera, which now also captures the GPS location. For each QR code read, the content, GPS location, and timestamp are sent via HTTP POST to a remote server (`https://parroquia.of.ardor.link/api/qr`). This networking functionality is implemented within `utils/api.ts` and used by `app/(tabs)/scanner.tsx`, suggesting functionalities such as scanning for attendance, inventory, or donations with location tracking and centralized data collection.
+
+The `List` screen (`app/(tabs)/list.tsx`) allows users to manually send their current GPS location via HTTP POST to a remote server (`https://parroquia.of.ardor.link/api/locations`) by pressing the "Tomar lista de nuevo" button.
 
 ## Modules Used
 
@@ -30,15 +32,25 @@ The primary screen components and their layout are defined in the following file
 
 ## Request Retry Mechanism
 
-To ensure data persistence and reliability, especially in environments with intermittent network connectivity, a request retry mechanism has been implemented for failed POST requests. If a `sendQrData` request fails, it is automatically queued and stored persistently on the device. These queued requests are then retried when the application starts or resumes, and also **after every successful POST request**. There is a **1-second delay** between each retry attempt to prevent overwhelming the server.
+To ensure data persistence and reliability, especially in environments with intermittent network connectivity, a request retry mechanism has been implemented for failed POST requests. Both `sendQrData` (for `/api/qr`) and `sendLocationData` (for `/api/locations`) utilize this mechanism. Failed requests are automatically queued and stored persistently on the device.
+
+The retry behavior is differentiated based on the request type:
+
+-   **`/api/qr` requests:** These queued requests are retried when the application starts or resumes (via `app/(tabs)/_layout.tsx`), and also after every successful `sendQrData` request (via `utils/api.ts`).
+-   **`/api/locations` requests:** These queued requests are retried *only* when the "Tomar lista de nuevo" button is pressed in the `List` tab (via `app/(tabs)/list.tsx`).
+
+There is a **1-second delay** between each retry attempt to prevent overwhelming the server.
 
 **Key Components and Files:**
 
-- **`utils/requestQueue.ts`**: This new file contains the core logic for managing the request queue.
-  - `queueRequest(requestDetails)`: Stores a failed request's details (URL, method, headers, body, timestamp) in `AsyncStorage`.
-  - `getQueueLength()`: Returns the current number of requests in the queue.
-  - `processQueue(addLog)`: Retrieves requests from `AsyncStorage`, attempts to re-send them (with a 1-second delay between each attempt), and removes successfully sent requests from the queue. It also logs the processing status.
-- **`utils/api.ts`**: The `sendQrData` function in this file now integrates with the queuing mechanism. If a POST request fails, it calls `queueRequest` to store the request and logs the queuing event to the `LogScreen`. **After a successful POST request, it also triggers `processQueue` to attempt retransmitting any previously failed requests.**
-- **`app/(tabs)/scanner.tsx`**: This file, which initiates the `sendQrData` calls, now passes the `addLog` function (from `useLog` hook) to `sendQrData` to enable logging of queuing events.
-- **`app/(tabs)/_layout.tsx`**: This layout file is responsible for initiating the `processQueue` function when the application's tab layout component mounts. It retrieves the `addLog` function from the `useLog` context and passes it to `processQueue` to ensure retry attempts are logged.
-- **`@react-native-async-storage/async-storage`**: This library is used for persistent storage of the request queue, ensuring that queued requests survive app crashes or device restarts.
+-   **`utils/requestQueue.ts`**: This file contains the core logic for managing the request queue.
+    -   `queueRequest(requestDetails)`: Stores a failed request's details (URL, method, headers, body, timestamp) in `AsyncStorage`.
+    -   `getQueueLength()`: Returns the current number of requests in the queue.
+    -   `processQueue(addLog, urlFilter?)`: Retrieves requests from `AsyncStorage`, attempts to re-send them (with a 1-second delay between each attempt), and removes successfully sent requests from the queue. It now accepts an optional `urlFilter` to process only requests matching a specific URL. It also logs the processing status.
+-   **`utils/api.ts`**:
+    -   The `sendQrData` function integrates with the queuing mechanism. If a POST request fails, it calls `queueRequest`. After a successful `sendQrData` request, it triggers `processQueue` with a filter for `'/api/qr'` to retransmit any previously failed QR requests.
+    -   The `sendLocationData` function also integrates with the queuing mechanism. If a POST request fails, it calls `queueRequest`. It *does not* automatically trigger `processQueue` after a successful send.
+-   **`app/(tabs)/scanner.tsx`**: This file, which initiates the `sendQrData` calls, passes the `addLog` function (from `useLog` hook) to `sendQrData` to enable logging of queuing events.
+-   **`app/(tabs)/list.tsx`**: This file, specifically the `handleReload` function triggered by the "Tomar lista de nuevo" button, now explicitly calls `processQueue` with a filter for `'/api/locations'` after a successful `sendLocationData` call, ensuring that only failed location requests are retried at this point.
+-   **`app/(tabs)/_layout.tsx`**: This layout file is responsible for initiating `processQueue` when the application's tab layout component mounts. It now calls `processQueue` with a filter for `'/api/qr'` to ensure only failed QR requests are retried on startup.
+-   **`@react-native-async-storage/async-storage`**: This library is used for persistent storage of the request queue, ensuring that queued requests survive app crashes or device restarts.
