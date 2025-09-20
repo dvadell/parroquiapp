@@ -23,7 +23,7 @@ export default function TabLayout() {
         tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
         headerShown: false,
         tabBarButton: HapticTab,
-        tabBarStyle: { backgroundColor: 'white', height: 90 },
+        tabBarStyle: { backgroundColor: 'white', height: 120 },
         tabBarLabelStyle: { fontSize: 20 },
       }}
     >

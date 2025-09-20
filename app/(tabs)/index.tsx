@@ -224,8 +224,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: Colors.light.background,
     flex: 1,
-    justifyContent: 'center',
     paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
+    paddingVertical: 30, // Added vertical padding
   },
   okText: {
     color: Colors.light.success,

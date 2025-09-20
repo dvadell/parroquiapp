@@ -53,6 +53,7 @@ export default function ListScreen() {
 
   return (
     <View style={styles.container}>
+      <Text style={styles.title}>Attendance List</Text>
       <TouchableOpacity style={styles.button} onPress={handleReload}>
         <Text style={styles.buttonText}>Tomar lista de nuevo</Text>
       </TouchableOpacity>
@@ -80,6 +81,14 @@ const styles = StyleSheet.create({
   container: {
     backgroundColor: Colors.light.background,
     flex: 1,
+    paddingVertical: 30,
+  },
+  title: {
+    color: Colors.light.text,
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 20,
+    textAlign: 'center',
   },
   webview: {
     flex: 1,
