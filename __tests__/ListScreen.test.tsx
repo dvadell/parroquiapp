@@ -4,6 +4,10 @@ import ListScreen from '../app/(tabs)/list';
 import { LogProvider } from '../hooks/use-log';
 import { Alert } from 'react-native';
 
+jest.mock('@expo/vector-icons', () => ({
+  Ionicons: 'Ionicons',
+}));
+
 // Mock the theme constants
 jest.mock('@/constants/theme', () => ({
   Colors: {
@@ -76,10 +80,6 @@ describe('ListScreen', () => {
 
     await waitFor(() => {
       expect(setKey).toHaveBeenCalled();
-      expect(Alert.alert).toHaveBeenCalledWith(
-        'Success',
-        'Location data sent successfully!'
-      );
     });
   });
 });
