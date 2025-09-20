@@ -6,10 +6,12 @@ import {
   StyleSheet,
   Text,
   View,
+  Animated,
+  Easing,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { CameraView, useCameraPermissions } from 'expo-camera';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import * as Location from 'expo-location';
 import { Colors } from '@/constants/theme';
 import { sendQrData } from '@/utils/api';
@@ -18,7 +20,17 @@ import { useLog } from '@/hooks/use-log';
 export default function ScannerScreen() {
   const [permission, requestPermission] = useCameraPermissions();
   const [scanned, setScanned] = useState(false);
+  const [isCameraActive, setIsCameraActive] = useState(true);
+  const [screenshotUri, setScreenshotUri] = useState<string | null>(null);
   const { addLog } = useLog();
+  const cameraRef = useRef<CameraView>(null);
+  const [animationState, setAnimationState] = useState({
+    processingText: '',
+    showOK: false,
+  });
+
+  const floatAnim = useRef(new Animated.Value(0)).current;
+  const fadeAnim = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
     (async () => {
@@ -52,7 +64,30 @@ export default function ScannerScreen() {
   }
 
   const handleBarcodeScanned = async ({ data }: { data: string }) => {
+    setIsCameraActive(false);
+
+    try {
+      if (cameraRef.current) {
+        const photo = await cameraRef.current.takePictureAsync();
+        setScreenshotUri(photo.uri);
+      }
+    } catch {
+      addLog({ type: 'ERROR', message: 'Failed to capture image' });
+      // If image capture fails, proceed without a screenshot
+    }
+
     setScanned(true);
+    setAnimationState({
+      processingText: `Processing ${data}...`,
+      showOK: false,
+    });
+
+    Animated.timing(floatAnim, {
+      toValue: 1,
+      duration: 500,
+      easing: Easing.out(Easing.ease),
+      useNativeDriver: true,
+    }).start();
 
     const currentLocation = await Location.getCurrentPositionAsync({});
 
@@ -77,19 +112,23 @@ export default function ScannerScreen() {
     });
 
     if (result.success) {
-      Alert.alert(
-        'QR Code Scanned!',
-        result.message,
-        [
-          {
-            text: 'Scan Again',
-            onPress: () => {
-              setScanned(false);
-            },
-          },
-        ],
-        { cancelable: false }
-      );
+      setAnimationState({
+        processingText: `Processing ${data}...`,
+        showOK: true,
+      });
+      setTimeout(() => {
+        Animated.timing(fadeAnim, {
+          toValue: 0,
+          duration: 500,
+          useNativeDriver: true,
+        }).start(() => {
+          setScanned(false);
+          setIsCameraActive(true);
+          setScreenshotUri(null);
+          floatAnim.setValue(0);
+          fadeAnim.setValue(1);
+        });
+      }, 2000);
     } else {
       Alert.alert(
         'Error',
@@ -99,12 +138,28 @@ export default function ScannerScreen() {
             text: 'Continue Scanning',
             onPress: () => {
               setScanned(false);
+              setIsCameraActive(true);
+              setScreenshotUri(null);
+              floatAnim.setValue(0);
+              fadeAnim.setValue(1);
             },
           },
         ],
         { cancelable: false }
       );
     }
+  };
+
+  const animatedStyle = {
+    transform: [
+      {
+        translateY: floatAnim.interpolate({
+          inputRange: [0, 1],
+          outputRange: [0, 200],
+        }),
+      },
+    ],
+    opacity: fadeAnim,
   };
 
   return (
@@ -114,25 +169,43 @@ export default function ScannerScreen() {
       <Text style={styles.title}>Scan QR Code</Text>
 
       <View style={styles.cameraContainer}>
-        <CameraView
-          onBarcodeScanned={scanned ? undefined : handleBarcodeScanned}
-          barcodeScannerSettings={{
-            barcodeTypes: ['qr'],
-          }}
-          style={StyleSheet.absoluteFillObject}
-        />
-        <View style={styles.overlay}>
-          <View style={styles.scanArea} />
-        </View>
+        {scanned && screenshotUri ? (
+          <Animated.View style={[styles.cameraContainer, animatedStyle]}>
+            <Animated.Image
+              source={{ uri: screenshotUri }}
+              style={StyleSheet.absoluteFillObject}
+            />
+          </Animated.View>
+        ) : (
+          isCameraActive && (
+            <CameraView
+              ref={cameraRef}
+              onBarcodeScanned={
+                isCameraActive ? handleBarcodeScanned : undefined
+              }
+              barcodeScannerSettings={{
+                barcodeTypes: ['qr'],
+              }}
+              style={StyleSheet.absoluteFillObject}
+            />
+          )
+        )}
+        {!scanned && (
+          <View style={styles.overlay}>
+            <View style={styles.scanArea} />
+          </View>
+        )}
       </View>
 
       {scanned && (
-        <Button
-          title={'Tap to Scan Again'}
-          onPress={() => {
-            setScanned(false);
-          }}
-        />
+        <Animated.View
+          style={[styles.processingContainer, { opacity: fadeAnim }]}
+        >
+          <Text style={styles.text}>
+            {animationState.processingText}
+            {animationState.showOK && <Text style={styles.okText}> OK</Text>}
+          </Text>
+        </Animated.View>
       )}
     </SafeAreaView>
   );
@@ -154,10 +227,19 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
   },
+  okText: {
+    color: Colors.light.success,
+  },
   overlay: {
     ...StyleSheet.absoluteFillObject,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  processingContainer: {
+    alignItems: 'center',
+    backgroundColor: Colors.light.white,
+    borderRadius: 10,
+    padding: 10,
   },
   scanArea: {
     borderColor: Colors.light.white,

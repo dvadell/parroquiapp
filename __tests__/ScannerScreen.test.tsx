@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, fireEvent, waitFor, act } from '@testing-library/react-native';
+import { render, waitFor, act } from '@testing-library/react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import ScannerScreen from '../app/(tabs)/index';
 import { Alert } from 'react-native';
@@ -147,32 +147,26 @@ describe('ScannerScreen', () => {
     expect(getByText('Requesting for camera permission...')).toBeTruthy();
   });
 
-  it('calls onBarcodeScanned and shows alert when QR code is scanned', async () => {
-    const { getByText } = renderWithLogProvider(<ScannerScreen />);
+  it('shows processing animation when QR code is scanned', async () => {
+    const { getByText, queryByText } = renderWithLogProvider(<ScannerScreen />);
 
-    // Get the mock function for CameraView
-
-    // Access the props passed to the first call of MockCameraView
     const cameraViewProps = MockCameraView.mock.calls[0][0];
 
-    // Simulate barcode scan
     act(() => {
       cameraViewProps.onBarcodeScanned({ data: 'test-qr-data' });
     });
 
     await waitFor(() => {
-      expect(Alert.alert).toHaveBeenCalledWith(
-        'QR Code Scanned!',
-        'QR data sent successfully.',
-        [{ text: 'Scan Again', onPress: expect.any(Function) }],
-        { cancelable: false }
-      );
+      expect(getByText(/^Processing.*test-qr-data/)).toBeTruthy();
     });
 
-    // Simulate "Scan Again" button press
-    const scanAgainButton = getByText('Tap to Scan Again');
-    fireEvent.press(scanAgainButton);
-    expect(getByText('Scan QR Code')).toBeTruthy(); // Should go back to scanning state
+    await waitFor(() => {
+      expect(getByText('OK')).toBeTruthy();
+    });
+
+    await waitFor(() => {
+      expect(queryByText('Processing...')).toBeNull();
+    });
   });
 
   it('sends QR data to remote server on successful scan', async () => {
@@ -209,12 +203,6 @@ describe('ScannerScreen', () => {
             date: MOCK_ISO_DATE, // Date will be dynamic
           }),
         })
-      );
-      expect(Alert.alert).toHaveBeenCalledWith(
-        'QR Code Scanned!',
-        'QR data sent successfully.',
-        [{ text: 'Scan Again', onPress: expect.any(Function) }],
-        { cancelable: false }
       );
     });
     mockFetch.mockRestore(); // Restore original fetch mock

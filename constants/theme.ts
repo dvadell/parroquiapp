@@ -21,6 +21,7 @@ export const Colors = {
     lightGray: '#f0f0f0',
     mediumGray: '#666',
     darkGray: '#888',
+    success: '#28a745',
   },
   dark: {
     text: '#ECEDEE',
@@ -34,6 +35,7 @@ export const Colors = {
     lightGray: '#333333',
     mediumGray: '#999',
     darkGray: '#777',
+    success: '#28a745',
   },
 };
 
