@@ -20,11 +20,11 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
+        tabBarActiveTintColor: 'black',
         headerShown: false,
         tabBarButton: HapticTab,
         tabBarStyle: { backgroundColor: 'white', height: 120 },
-        tabBarLabelStyle: { fontSize: 20 },
+        tabBarLabelStyle: { fontSize: 20, fontWeight: 'bold' },
       }}
     >
       <Tabs.Screen
