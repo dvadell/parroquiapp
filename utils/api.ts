@@ -73,3 +73,70 @@ export async function sendQrData(
     };
   }
 }
+
+export async function sendLocationData(
+  location: string,
+  addLog: (payload: {
+    type: 'LOCATION_SEND' | 'POST_RESULT';
+    message: string;
+    data?: unknown;
+  }) => void
+): Promise<{ success: boolean; message: string; error?: unknown }> {
+  const url = 'https://parroquia.of.ardor.link/api/locations';
+  const method = 'POST';
+  const headers = {
+    'Content-Type': 'application/json',
+    Authorization: 'Basic cGFycm9xdWlhOnBhcnJvcXVpYQ==',
+  };
+  const body = JSON.stringify({ location });
+
+  try {
+    const response = await fetch(url, {
+      method,
+      headers,
+      body,
+    });
+
+    if (!response.ok) {
+      const errorData = await response.text();
+      throw new Error(
+        `HTTP error! status: ${response.status}, message: ${errorData}`
+      );
+    }
+
+    const result = {
+      success: true,
+      message: 'Location data sent successfully.',
+    };
+    processQueue(addLog);
+    return result;
+  } catch (error: unknown) {
+    const requestDetails = {
+      url,
+      method,
+      headers,
+      body,
+      timestamp: Date.now(),
+    };
+    await queueRequest(requestDetails);
+    const currentQueueLength = await getQueueLength();
+
+    const errorMessage = 'Failed to send location data. Queueing.';
+    const logMessage = `POST Result: ${errorMessage} ( ${currentQueueLength} queued requests )`;
+
+    addLog({
+      type: 'POST_RESULT',
+      message: logMessage,
+      data: {
+        error: error instanceof Error ? error.message : String(error),
+        queuedRequests: currentQueueLength,
+      },
+    });
+
+    return {
+      success: false,
+      message: errorMessage,
+      error: error instanceof Error ? error.message : String(error),
+    };
+  }
+}
