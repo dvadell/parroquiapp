@@ -236,7 +236,7 @@ describe('ScannerScreen', () => {
     await waitFor(() => {
       expect(mockFetch).toHaveBeenCalledTimes(1);
       expect(processQueue).toHaveBeenCalledTimes(1);
-      expect(processQueue).toHaveBeenCalledWith(mockAddLog);
+      expect(processQueue).toHaveBeenCalledWith(mockAddLog, '/api/qr');
     });
 
     mockFetch.mockRestore();

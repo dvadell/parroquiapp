@@ -36,21 +36,21 @@ To ensure data persistence and reliability, especially in environments with inte
 
 The retry behavior is differentiated based on the request type:
 
--   **`/api/qr` requests:** These queued requests are retried when the application starts or resumes (via `app/(tabs)/_layout.tsx`), and also after every successful `sendQrData` request (via `utils/api.ts`).
--   **`/api/locations` requests:** These queued requests are retried *only* when the "Tomar lista de nuevo" button is pressed in the `List` tab (via `app/(tabs)/list.tsx`).
+- **`/api/qr` requests:** These queued requests are retried when the application starts or resumes (via `app/(tabs)/_layout.tsx`), and also after every successful `sendQrData` request (via `utils/api.ts`).
+- **`/api/locations` requests:** These queued requests are retried _only_ when the "Tomar lista de nuevo" button is pressed in the `List` tab (via `app/(tabs)/list.tsx`).
 
 There is a **1-second delay** between each retry attempt to prevent overwhelming the server.
 
 **Key Components and Files:**
 
--   **`utils/requestQueue.ts`**: This file contains the core logic for managing the request queue.
-    -   `queueRequest(requestDetails)`: Stores a failed request's details (URL, method, headers, body, timestamp) in `AsyncStorage`.
-    -   `getQueueLength()`: Returns the current number of requests in the queue.
-    -   `processQueue(addLog, urlFilter?)`: Retrieves requests from `AsyncStorage`, attempts to re-send them (with a 1-second delay between each attempt), and removes successfully sent requests from the queue. It now accepts an optional `urlFilter` to process only requests matching a specific URL. It also logs the processing status.
--   **`utils/api.ts`**:
-    -   The `sendQrData` function integrates with the queuing mechanism. If a POST request fails, it calls `queueRequest`. After a successful `sendQrData` request, it triggers `processQueue` with a filter for `'/api/qr'` to retransmit any previously failed QR requests.
-    -   The `sendLocationData` function also integrates with the queuing mechanism. If a POST request fails, it calls `queueRequest`. It *does not* automatically trigger `processQueue` after a successful send.
--   **`app/(tabs)/scanner.tsx`**: This file, which initiates the `sendQrData` calls, passes the `addLog` function (from `useLog` hook) to `sendQrData` to enable logging of queuing events.
--   **`app/(tabs)/list.tsx`**: This file, specifically the `handleReload` function triggered by the "Tomar lista de nuevo" button, now explicitly calls `processQueue` with a filter for `'/api/locations'` after a successful `sendLocationData` call, ensuring that only failed location requests are retried at this point.
--   **`app/(tabs)/_layout.tsx`**: This layout file is responsible for initiating `processQueue` when the application's tab layout component mounts. It now calls `processQueue` with a filter for `'/api/qr'` to ensure only failed QR requests are retried on startup.
--   **`@react-native-async-storage/async-storage`**: This library is used for persistent storage of the request queue, ensuring that queued requests survive app crashes or device restarts.
+- **`utils/requestQueue.ts`**: This file contains the core logic for managing the request queue.
+  - `queueRequest(requestDetails)`: Stores a failed request's details (URL, method, headers, body, timestamp) in `AsyncStorage`.
+  - `getQueueLength()`: Returns the current number of requests in the queue.
+  - `processQueue(addLog, urlFilter?)`: Retrieves requests from `AsyncStorage`, attempts to re-send them (with a 1-second delay between each attempt), and removes successfully sent requests from the queue. It now accepts an optional `urlFilter` to process only requests matching a specific URL. It also logs the processing status.
+- **`utils/api.ts`**:
+  - The `sendQrData` function integrates with the queuing mechanism. If a POST request fails, it calls `queueRequest`. After a successful `sendQrData` request, it triggers `processQueue` with a filter for `'/api/qr'` to retransmit any previously failed QR requests.
+  - The `sendLocationData` function also integrates with the queuing mechanism. If a POST request fails, it calls `queueRequest`. It _does not_ automatically trigger `processQueue` after a successful send.
+- **`app/(tabs)/scanner.tsx`**: This file, which initiates the `sendQrData` calls, passes the `addLog` function (from `useLog` hook) to `sendQrData` to enable logging of queuing events.
+- **`app/(tabs)/list.tsx`**: This file, specifically the `handleReload` function triggered by the "Tomar lista de nuevo" button, now explicitly calls `processQueue` with a filter for `'/api/locations'` after a successful `sendLocationData` call, ensuring that only failed location requests are retried at this point.
+- **`app/(tabs)/_layout.tsx`**: This layout file is responsible for initiating `processQueue` when the application's tab layout component mounts. It now calls `processQueue` with a filter for `'/api/qr'` to ensure only failed QR requests are retried on startup.
+- **`@react-native-async-storage/async-storage`**: This library is used for persistent storage of the request queue, ensuring that queued requests survive app crashes or device restarts.

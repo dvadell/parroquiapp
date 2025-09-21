@@ -4,12 +4,10 @@ import React, { useEffect } from 'react';
 import { HapticTab } from '@/components/haptic-tab';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 
-
 import { useLog } from '@/hooks/use-log'; // Import useLog
 import { processQueue } from '@/utils/requestQueue'; // Import processQueue
 
 export default function TabLayout() {
-  
   const { addLog } = useLog(); // Get addLog from context
 
   useEffect(() => {

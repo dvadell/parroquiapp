@@ -1,4 +1,11 @@
-import { StyleSheet, View, Text, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
+import {
+  StyleSheet,
+  View,
+  Text,
+  TouchableOpacity,
+  Alert,
+  ActivityIndicator,
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '@/constants/theme';
 import { WebView } from 'react-native-webview';
@@ -67,7 +74,11 @@ export default function ListScreen() {
     <View style={styles.container}>
       <Text style={styles.title}>Attendance List</Text>
       <View style={styles.buttonContainer}>
-        <TouchableOpacity style={styles.button} onPress={handleSendLocationAndReloadWebView} disabled={isLoading}>
+        <TouchableOpacity
+          style={styles.button}
+          onPress={handleSendLocationAndReloadWebView}
+          disabled={isLoading}
+        >
           {isLoading ? (
             <ActivityIndicator color={Colors.light.white} />
           ) : (
