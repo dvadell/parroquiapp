@@ -67,8 +67,6 @@ export async function processQueue(
         continue;
       }
 
-      // Add a 1-second delay between requests
-      await new Promise((resolve) => setTimeout(resolve, 1000));
       try {
         const response = await fetch(request.url, {
           method: request.method,
