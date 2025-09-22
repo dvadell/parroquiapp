@@ -13,6 +13,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { useState, useEffect, useRef } from 'react';
 import * as Location from 'expo-location';
+import { useAudioPlayer, setAudioModeAsync } from 'expo-audio';
+import beepSound from '../../assets/sounds/beep.wav';
 import { Colors } from '@/constants/theme';
 import { sendQrData } from '@/utils/api';
 import { useLog } from '@/hooks/use-log';
@@ -31,6 +33,7 @@ export default function ScannerScreen() {
 
   const floatAnim = useRef(new Animated.Value(0)).current;
   const fadeAnim = useRef(new Animated.Value(1)).current;
+  const player = useAudioPlayer(beepSound);
 
   useEffect(() => {
     (async () => {
@@ -39,6 +42,12 @@ export default function ScannerScreen() {
         Alert.alert('Permission to access location was denied');
         return;
       }
+    })();
+
+    (async () => {
+      await setAudioModeAsync({
+        playsInSilentMode: true,
+      });
     })();
   }, []);
 
@@ -65,6 +74,13 @@ export default function ScannerScreen() {
 
   const handleBarcodeScanned = async ({ data }: { data: string }) => {
     setIsCameraActive(false);
+
+    try {
+      player.seekTo(0);
+      player.play();
+    } catch {
+      // TODO: Handle audio playback error
+    }
 
     try {
       if (cameraRef.current) {

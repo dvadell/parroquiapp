@@ -31,13 +31,25 @@ jest.mock('@react-native-async-storage/async-storage', () => {
 
   return {
     getItem: jest.fn((key) => {
+      if (key === '__proto__' || key === 'constructor' || key === 'prototype') {
+        return Promise.resolve(null);
+      }
+      // eslint-disable-next-line security/detect-object-injection
       return Promise.resolve(cache[key] || null);
     }),
     setItem: jest.fn((key, value) => {
+      if (key === '__proto__' || key === 'constructor' || key === 'prototype') {
+        return Promise.resolve(null);
+      }
+      // eslint-disable-next-line security/detect-object-injection
       cache[key] = value;
       return Promise.resolve(null);
     }),
     removeItem: jest.fn((key) => {
+      if (key === '__proto__' || key === 'constructor' || key === 'prototype') {
+        return Promise.resolve(null);
+      }
+      // eslint-disable-next-line security/detect-object-injection
       delete cache[key];
       return Promise.resolve(null);
     }),
@@ -51,3 +63,12 @@ jest.mock('@react-native-async-storage/async-storage', () => {
     },
   };
 });
+
+jest.mock('expo-audio', () => ({
+  useAudioPlayer: jest.fn(() => ({
+    play: jest.fn(),
+    pause: jest.fn(),
+    seekTo: jest.fn(),
+  })),
+  setAudioModeAsync: jest.fn(() => Promise.resolve()),
+}));
