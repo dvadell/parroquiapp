@@ -18,6 +18,7 @@ import { processQueue } from '@/utils/requestQueue';
 export default function ListScreen() {
   const [key, setKey] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const { addLog } = useLog();
 
   useEffect(() => {
@@ -66,8 +67,14 @@ export default function ListScreen() {
     }
   };
 
-  const handleReloadWebView = () => {
+  const handleReloadWebView = async () => {
+    setIsRefreshing(true);
     setKey((prevKey) => prevKey + 1);
+    try {
+      await processQueue(addLog);
+    } finally {
+      setIsRefreshing(false);
+    }
   };
 
   return (
@@ -77,7 +84,7 @@ export default function ListScreen() {
         <TouchableOpacity
           style={styles.button}
           onPress={handleSendLocationAndReloadWebView}
-          disabled={isLoading}
+          disabled={isLoading || isRefreshing}
         >
           {isLoading ? (
             <ActivityIndicator color={Colors.light.white} />
@@ -88,8 +95,13 @@ export default function ListScreen() {
         <TouchableOpacity
           style={styles.refreshIconContainer}
           onPress={handleReloadWebView}
+          disabled={isLoading || isRefreshing}
         >
-          <Ionicons name="refresh" size={24} color={Colors.light.white} />
+          {isRefreshing ? (
+            <ActivityIndicator color={Colors.light.white} />
+          ) : (
+            <Ionicons name="refresh" size={24} color={Colors.light.white} />
+          )}
         </TouchableOpacity>
       </View>
       <WebView
