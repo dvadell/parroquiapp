@@ -109,6 +109,10 @@ export default function ListScreen() {
         style={styles.webview}
         source={{ uri: 'https://parroquia:parroquia@parroquia.of.ardor.link/' }}
         testID="list-webview"
+        containerStyle={{ backgroundColor: 'transparent' }}
+        showsVerticalScrollIndicator={false}
+        showsHorizontalScrollIndicator={false}
+        forceDarkOn={false}
       />
     </View>
   );
@@ -158,5 +162,7 @@ const styles = StyleSheet.create({
   },
   webview: {
     flex: 1,
+    backgroundColor: 'transparent',
+    opacity: 1,
   },
 });
