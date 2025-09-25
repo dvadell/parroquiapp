@@ -124,7 +124,7 @@ describe('ScannerScreen', () => {
 
   it('renders correctly when camera permissions are granted', () => {
     const { getByText } = renderWithLogProvider(<ScannerScreen />);
-    expect(getByText('Scan QR Code')).toBeTruthy();
+    expect(getByText('Scan QR or Barcode')).toBeTruthy();
   });
 
   it('shows permission request message when permissions are not granted', () => {

@@ -182,7 +182,7 @@ export default function ScannerScreen() {
     <SafeAreaView style={styles.container}>
       {Platform.OS === 'android' ? <StatusBar hidden /> : null}
 
-      <Text style={styles.title}>Scan QR Code</Text>
+      <Text style={styles.title}>Scan QR or Barcode</Text>
 
       <View style={styles.cameraContainer}>
         {scanned && screenshotUri ? (
@@ -200,7 +200,21 @@ export default function ScannerScreen() {
                 isCameraActive ? handleBarcodeScanned : undefined
               }
               barcodeScannerSettings={{
-                barcodeTypes: ['qr'],
+                barcodeTypes: [
+                  'qr',
+                  'ean13',
+                  'ean8',
+                  'upc_a',
+                  'upc_e',
+                  'code39',
+                  'code93',
+                  'code128',
+                  'codabar',
+                  'itf14',
+                  'datamatrix',
+                  'pdf417',
+                  'aztec',
+                ],
               }}
               style={StyleSheet.absoluteFillObject}
             />
