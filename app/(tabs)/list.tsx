@@ -67,6 +67,24 @@ export default function ListScreen() {
     }
   };
 
+  const confirmAndSendLocation = () => {
+    Alert.alert(
+      'Confirmar',
+      'Esta seguro de que quiere tomar lista de nuevo? todos los Presentes pasaran a la lista de Ausentes',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'OK',
+          onPress: handleSendLocationAndReloadWebView,
+        },
+      ],
+      { cancelable: true }
+    );
+  };
+
   const handleReloadWebView = async () => {
     setIsRefreshing(true);
     setKey((prevKey) => prevKey + 1);
@@ -83,7 +101,7 @@ export default function ListScreen() {
       <View style={styles.buttonContainer}>
         <TouchableOpacity
           style={styles.button}
-          onPress={handleSendLocationAndReloadWebView}
+          onPress={confirmAndSendLocation}
           disabled={isLoading || isRefreshing}
         >
           {isLoading ? (
@@ -109,7 +127,6 @@ export default function ListScreen() {
         style={styles.webview}
         source={{ uri: 'https://parroquia:parroquia@parroquia.of.ardor.link/' }}
         testID="list-webview"
-        containerStyle={{ backgroundColor: 'transparent' }}
         showsVerticalScrollIndicator={false}
         showsHorizontalScrollIndicator={false}
         forceDarkOn={false}
@@ -161,8 +178,8 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   webview: {
+    backgroundColor: Colors.light.background,
     flex: 1,
-    backgroundColor: 'transparent',
     opacity: 1,
   },
 });

@@ -65,10 +65,6 @@ describe('ListScreen', () => {
   });
 
   it('reloads webview on button press', async () => {
-    const setKey = jest.fn();
-    const useStateSpy = jest.spyOn(React, 'useState');
-    useStateSpy.mockImplementation((initialValue) => [initialValue, setKey]);
-
     const { getByText } = render(
       <LogProvider>
         <ListScreen />
@@ -79,7 +75,21 @@ describe('ListScreen', () => {
     fireEvent.press(button);
 
     await waitFor(() => {
-      expect(setKey).toHaveBeenCalled();
+      expect(Alert.alert).toHaveBeenCalledWith(
+        'Confirmar',
+        'Esta seguro de que quiere tomar lista de nuevo? todos los Presentes pasaran a la lista de Ausentes',
+        [
+          {
+            text: 'Cancel',
+            style: 'cancel',
+          },
+          {
+            text: 'OK',
+            onPress: expect.any(Function),
+          },
+        ],
+        { cancelable: true }
+      );
     });
   });
 });
