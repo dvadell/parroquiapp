@@ -144,7 +144,7 @@ export default function ScannerScreen() {
           floatAnim.setValue(0);
           fadeAnim.setValue(1);
         });
-      }, 2000);
+      }, 500);
     } else {
       Alert.alert(
         'Error',
