@@ -11,10 +11,6 @@ import { useColorScheme } from '@/hooks/use-color-scheme';
 
 import { LogProvider } from '@/hooks/use-log';
 
-export const unstable_settings = {
-  initialRouteName: '(tabs)',
-};
-
 export default function RootLayout() {
   const colorScheme = useColorScheme();
 
@@ -22,6 +18,7 @@ export default function RootLayout() {
     <LogProvider>
       <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
         <Stack>
+          <Stack.Screen name="index" options={{ headerShown: false }} />
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen
             name="modal"
