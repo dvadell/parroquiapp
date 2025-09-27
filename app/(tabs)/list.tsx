@@ -97,7 +97,7 @@ export default function ListScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Attendance List</Text>
+      <Text style={styles.title}>Lista de Presentes</Text>
       <View style={styles.buttonContainer}>
         <TouchableOpacity
           style={styles.button}

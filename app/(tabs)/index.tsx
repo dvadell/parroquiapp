@@ -182,7 +182,7 @@ export default function ScannerScreen() {
     <SafeAreaView style={styles.container}>
       {Platform.OS === 'android' ? <StatusBar hidden /> : null}
 
-      <Text style={styles.title}>Scan QR or Barcode</Text>
+      <Text style={styles.title}>Scan QR o codigo de barras</Text>
 
       <View style={styles.cameraContainer}>
         {scanned && screenshotUri ? (
