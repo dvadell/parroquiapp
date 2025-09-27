@@ -13,6 +13,9 @@
       "distribution": "internal"
     },
     "production": {
+      "android": {
+        "buildType": "aab"
+      },
       "autoIncrement": true
     }
   },

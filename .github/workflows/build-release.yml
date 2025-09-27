@@ -1,0 +1,83 @@
+name: Build and Release APK/AAB
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name:  Setup repo
+        uses: actions/checkout@v4
+
+      - name:  Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: npm
+
+      - name:  Setup EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name:  Install dependencies
+        run: npm ci
+
+      - name:  Build APK
+        run: eas build --platform android --profile preview --non-interactive --wait
+
+      - name:  Build AAB  
+        run: eas build --platform android --profile production --non-interactive --wait
+
+      - name:  Download APK
+        run: |
+          APK_URL=$(eas build:list --platform=android --buildProfile=preview --limit=1 --json | jq -r '.[0].artifacts.buildUrl')
+          curl -o app-release.apk -L "$APK_URL"
+
+      - name:  Download AAB
+        run: |
+          AAB_URL=$(eas build:list --platform=android --buildProfile=production --limit=1 --json | jq -r '.[0].artifacts.buildUrl')
+          curl -o app-release.aab -L "$AAB_URL"
+
+      - name: ️ Generate release tag
+        id: tag
+        run: |
+          echo "release_tag=v$(date +'%Y.%m.%d')-$(echo $GITHUB_SHA | cut -c1-7)" >> $GITHUB_OUTPUT
+
+      - name:  Get commit messages
+        id: changelog
+        run: |
+          COMMITS=$(git log --oneline -10 --pretty=format:"- %s" | head -10)
+          echo "changelog<<EOF" >> $GITHUB_OUTPUT
+          echo "$COMMITS" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name:  Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.tag.outputs.release_tag }}
+          name: Release ${{ steps.tag.outputs.release_tag }}
+          body: |
+            ##  Android Build
+            
+            **Build Date:** $(date +'%Y-%m-%d %H:%M:%S UTC')
+            **Commit:** ${{ github.sha }}
+            
+            ###  Downloads
+            - **APK (Preview):** For testing and distribution outside Google Play
+            - **AAB (Production):** For Google Play Store submission
+            
+            ###  Recent Changes
+            ${{ steps.changelog.outputs.changelog }}
+            
+            ---
+            *Generated automatically from commit ${{ github.sha }}*
+          files: |
+            app-release.apk
+            app-release.aab
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
