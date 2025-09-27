@@ -1,4 +1,4 @@
-name: Build and Release APK/AAB
+name: Build and Release APK/AAB (Local Build)
 on:
   push:
     branches: [main]
@@ -16,6 +16,25 @@ jobs:
           node-version: 18
           cache: npm
 
+      - name: ☕ Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name:  Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name:  Cache Gradle
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
       - name:  Setup EAS
         uses: expo/expo-github-action@v8
         with:
@@ -25,21 +44,49 @@ jobs:
       - name:  Install dependencies
         run: npm ci
 
-      - name:  Build APK
-        run: eas build --platform android --profile preview --non-interactive --wait
-
-      - name:  Build AAB  
-        run: eas build --platform android --profile production --non-interactive --wait
-
-      - name:  Download APK
+      - name:  Setup Android environment
         run: |
-          APK_URL=$(eas build:list --platform=android --buildProfile=preview --limit=1 --json | jq -r '.[0].artifacts.buildUrl')
-          curl -o app-release.apk -L "$APK_URL"
+          echo "ANDROID_HOME=$ANDROID_HOME" >> $GITHUB_ENV
+          echo "ANDROID_SDK_ROOT=$ANDROID_HOME" >> $GITHUB_ENV
+          echo "$ANDROID_HOME/emulator" >> $GITHUB_PATH
+          echo "$ANDROID_HOME/tools" >> $GITHUB_PATH
+          echo "$ANDROID_HOME/tools/bin" >> $GITHUB_PATH
+          echo "$ANDROID_HOME/platform-tools" >> $GITHUB_PATH
 
-      - name:  Download AAB
+      - name:  Accept Android SDK licenses
+        run: yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
+
+      - name:  Build APK (Local)
+        run: eas build --platform android --profile preview --non-interactive --wait --local
+
+      - name:  Build AAB (Local)
+        run: eas build --platform android --profile production --non-interactive --wait --local
+
+      - name:  Find build artifacts
+        id: find_artifacts
         run: |
-          AAB_URL=$(eas build:list --platform=android --buildProfile=production --limit=1 --json | jq -r '.[0].artifacts.buildUrl')
-          curl -o app-release.aab -L "$AAB_URL"
+          # Find the most recent APK and AAB files
+          APK_PATH=$(find . -name "*.apk" -type f -not -path "./node_modules/*" | head -1)
+          AAB_PATH=$(find . -name "*.aab" -type f -not -path "./node_modules/*" | head -1)
+          
+          # Copy with standardized names
+          if [ -f "$APK_PATH" ]; then
+            cp "$APK_PATH" app-release.apk
+            echo "apk_found=true" >> $GITHUB_OUTPUT
+            echo "Found APK: $APK_PATH"
+          else
+            echo "apk_found=false" >> $GITHUB_OUTPUT
+            echo "No APK found"
+          fi
+          
+          if [ -f "$AAB_PATH" ]; then
+            cp "$AAB_PATH" app-release.aab  
+            echo "aab_found=true" >> $GITHUB_OUTPUT
+            echo "Found AAB: $AAB_PATH"
+          else
+            echo "aab_found=false" >> $GITHUB_OUTPUT
+            echo "No AAB found"
+          fi
 
       - name: ️ Generate release tag
         id: tag
@@ -54,30 +101,54 @@ jobs:
           echo "$COMMITS" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
+      - name:  Build summary
+        run: |
+          echo "##  Build Results" >> $GITHUB_STEP_SUMMARY
+          echo "| Artifact | Status |" >> $GITHUB_STEP_SUMMARY  
+          echo "|----------|---------|" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ steps.find_artifacts.outputs.apk_found }}" = "true" ]; then
+            echo "| APK | ✅ Built successfully |" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "| APK | ❌ Build failed |" >> $GITHUB_STEP_SUMMARY
+          fi
+          if [ "${{ steps.find_artifacts.outputs.aab_found }}" = "true" ]; then
+            echo "| AAB | ✅ Built successfully |" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "| AAB | ❌ Build failed |" >> $GITHUB_STEP_SUMMARY
+          fi
+
       - name:  Create Release
+        if: steps.find_artifacts.outputs.apk_found == 'true' || steps.find_artifacts.outputs.aab_found == 'true'
         uses: softprops/action-gh-release@v1
         with:
           tag_name: ${{ steps.tag.outputs.release_tag }}
           name: Release ${{ steps.tag.outputs.release_tag }}
           body: |
-            ##  Android Build
+            ##  Android Build (Local Compilation)
             
             **Build Date:** $(date +'%Y-%m-%d %H:%M:%S UTC')
             **Commit:** ${{ github.sha }}
+            **Build Type:** Local compilation with GitHub Actions
             
             ###  Downloads
-            - **APK (Preview):** For testing and distribution outside Google Play
-            - **AAB (Production):** For Google Play Store submission
+            ${{ steps.find_artifacts.outputs.apk_found == 'true' && '- **APK (Preview):** For testing and distribution outside Google Play' || '' }}
+            ${{ steps.find_artifacts.outputs.aab_found == 'true' && '- **AAB (Production):** For Google Play Store submission' || '' }}
             
             ###  Recent Changes
             ${{ steps.changelog.outputs.changelog }}
             
             ---
-            *Generated automatically from commit ${{ github.sha }}*
+            *Built locally using GitHub Actions with Android SDK*
           files: |
-            app-release.apk
-            app-release.aab
+            ${{ steps.find_artifacts.outputs.apk_found == 'true' && 'app-release.apk' || '' }}
+            ${{ steps.find_artifacts.outputs.aab_found == 'true' && 'app-release.aab' || '' }}
           draft: false
           prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: ❌ Fail if no artifacts built
+        if: steps.find_artifacts.outputs.apk_found != 'true' && steps.find_artifacts.outputs.aab_found != 'true'
+        run: |
+          echo "::error::No APK or AAB artifacts were built successfully"
+          exit 1
