@@ -125,7 +125,7 @@ export default function ListScreen() {
       <WebView
         key={key}
         style={styles.webview}
-        source={{ uri: 'https://parroquia:parroquia@parroquia.of.ardor.link/' }}
+        source={{ uri: 'https://parroquia:parroquia@snicolas.lantech.eu.org/' }}
         testID="list-webview"
         showsVerticalScrollIndicator={false}
         showsHorizontalScrollIndicator={false}
