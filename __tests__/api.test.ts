@@ -29,7 +29,7 @@ describe('api', () => {
 
     expect(mockFetch).toHaveBeenCalledTimes(1);
     expect(mockFetch).toHaveBeenCalledWith(
-      'https://parroquia.of.ardor.link/api/qr',
+      'https://snicolas.lantech.eu.org/api/qr',
       expect.objectContaining({
         method: 'POST',
         headers: {

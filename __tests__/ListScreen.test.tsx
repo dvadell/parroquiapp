@@ -60,7 +60,7 @@ describe('ListScreen', () => {
     );
     const webview = getByTestId('list-webview');
     expect(webview.props.source.uri).toBe(
-      'https://parroquia:parroquia@parroquia.of.ardor.link/'
+      'https://parroquia:parroquia@snicolas.lantech.eu.org/'
     );
   });
 

@@ -27,7 +27,7 @@ describe('requestQueue', () => {
   it('should process a single queued request with a 1-second delay', async () => {
     // Queue one failed request
     await queueRequest({
-      url: 'https://parroquia.of.ardor.link/api/qr',
+      url: 'https://snicolas.lantech.eu.org/api/qr',
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ qr: 'queued-qr-1' }),
@@ -51,14 +51,14 @@ describe('requestQueue', () => {
     // Expect the request to be sent
     expect(mockFetch).toHaveBeenCalledTimes(1);
     expect(mockFetch).toHaveBeenCalledWith(
-      'https://parroquia.of.ardor.link/api/qr',
+      'https://snicolas.lantech.eu.org/api/qr',
       expect.objectContaining({
         body: JSON.stringify({ qr: 'queued-qr-1' }),
       })
     );
     expect(mockLog).toHaveBeenCalledWith(
       expect.stringContaining(
-        'Successfully re-sent queued request: https://parroquia.of.ardor.link/api/qr'
+        'Successfully re-sent queued request: https://snicolas.lantech.eu.org/api/qr'
       )
     );
 

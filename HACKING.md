@@ -2,9 +2,9 @@
 
 ## App Description
 
-This is a mobile application built with Expo and React Native, likely designed for a parish (parroquia). It features a tab-based navigation structure with a "Scanner" screen and a "List" screen. The Scanner tab has a button that reads a QR code from the camera, which now also captures the GPS location. For each QR code read, the content, GPS location, and timestamp are sent via HTTP POST to a remote server (`https://parroquia.of.ardor.link/api/qr`). This networking functionality is implemented within `utils/api.ts` and used by `app/(tabs)/scanner.tsx`, suggesting functionalities such as scanning for attendance, inventory, or donations with location tracking and centralized data collection.
+This is a mobile application built with Expo and React Native, likely designed for a parish (parroquia). It features a tab-based navigation structure with a "Scanner" screen and a "List" screen. The Scanner tab has a button that reads a QR code from the camera, which now also captures the GPS location. For each QR code read, the content, GPS location, and timestamp are sent via HTTP POST to a remote server (`https://snicolas.lantech.eu.org/api/qr`). This networking functionality is implemented within `utils/api.ts` and used by `app/(tabs)/scanner.tsx`, suggesting functionalities such as scanning for attendance, inventory, or donations with location tracking and centralized data collection.
 
-The `List` screen (`app/(tabs)/list.tsx`) allows users to manually send their current GPS location via HTTP POST to a remote server (`https://parroquia.of.ardor.link/api/locations`) by pressing the "Tomar lista de nuevo" button.
+The `List` screen (`app/(tabs)/list.tsx`) allows users to manually send their current GPS location via HTTP POST to a remote server (`https://snicolas.lantech.eu.org/api/locations`) by pressing the "Tomar lista de nuevo" button.
 
 ## Modules Used
 

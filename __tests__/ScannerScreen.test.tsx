@@ -195,7 +195,7 @@ describe('ScannerScreen', () => {
     await waitFor(() => {
       expect(mockFetch).toHaveBeenCalledTimes(1);
       expect(mockFetch).toHaveBeenCalledWith(
-        'https://parroquia.of.ardor.link/api/qr',
+        'https://snicolas.lantech.eu.org/api/qr',
         expect.objectContaining({
           method: 'POST',
           headers: {
@@ -321,7 +321,7 @@ describe('ScannerScreen', () => {
       expect(storedQueue).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
-            url: 'https://parroquia.of.ardor.link/api/qr',
+            url: 'https://snicolas.lantech.eu.org/api/qr',
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',

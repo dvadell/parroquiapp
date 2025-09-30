@@ -16,7 +16,7 @@ export async function sendQrData(
     data?: unknown;
   }) => void
 ): Promise<{ success: boolean; message: string; error?: unknown }> {
-  const url = 'https://parroquia.of.ardor.link/api/qr';
+  const url = 'https://snicolas.lantech.eu.org/api/qr';
   const method = 'POST';
   const headers = {
     'Content-Type': 'application/json',
@@ -82,7 +82,7 @@ export async function sendLocationData(
     data?: unknown;
   }) => void
 ): Promise<{ success: boolean; message: string; error?: unknown }> {
-  const url = 'https://parroquia.of.ardor.link/api/locations';
+  const url = 'https://snicolas.lantech.eu.org/api/locations';
   const method = 'POST';
   const headers = {
     'Content-Type': 'application/json',
